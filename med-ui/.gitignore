@@ -1,0 +1,13 @@
+/backend/node_modules
+/backend/.env
+/backend/uploads
+
+# IDEA
+.idea
+.idea_modules
+/.worksheet/
+
+# docker volume
+/med-ui/docker/health-mongodb/*
+
+/med-ui/screen/*
