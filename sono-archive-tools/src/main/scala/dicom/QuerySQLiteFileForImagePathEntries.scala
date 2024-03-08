@@ -1,3 +1,5 @@
+package dicom
+
 object QuerySQLiteFileForImagePathEntries {
 
   import java.sql.{Connection, DriverManager, ResultSet, Statement}

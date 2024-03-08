@@ -1,3 +1,5 @@
+package db
+
 import com.mongodb.client.model.Accumulators.sum
 import com.mongodb.client.model.Aggregates.group
 import com.mongodb.client.model.Filters.{and, gte, lte}
@@ -17,7 +19,7 @@ case class HistoryVisit(visitId: UUID,
 
 object MongoWriterSample {
 
-  def runSample(): Unit = {
+  def runSample(path: String): Unit = {
 
     val createdAt = LocalDateTime.now().atZone(ZoneId.systemDefault())
     val uuid = java.util.UUID.nameUUIDFromBytes(createdAt.toString.getBytes)

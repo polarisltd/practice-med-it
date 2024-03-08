@@ -1,3 +1,5 @@
+package dicom
+
 import com.pixelmed.dicom.{AttributeList, DicomException}
 
 import java.io.{File, IOException}

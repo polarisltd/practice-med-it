@@ -9,4 +9,4 @@ services:
     env_file:
       - .mongodb_env
     volumes:
-      - ./health-mongodb:/data/db
+      - ${USER_HOME}/workspace/health-mongodb:/data/db

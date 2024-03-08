@@ -1,6 +1,8 @@
+package dicom
+
 object LookupSQLiteFiles {
   
-  import java.nio.file.{Files, Paths, Path}
+  import java.nio.file.{Files, Path, Paths}
   import java.util.stream.Collectors
   import scala.jdk.CollectionConverters._
 
