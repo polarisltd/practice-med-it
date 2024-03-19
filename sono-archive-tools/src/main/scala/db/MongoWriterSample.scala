@@ -19,7 +19,7 @@ case class HistoryVisit(visitId: UUID,
 
 object MongoWriterSample {
 
-  def runSample(path: String): Unit = {
+  def runSample(): Unit = {
 
     val createdAt = LocalDateTime.now().atZone(ZoneId.systemDefault())
     val uuid = java.util.UUID.nameUUIDFromBytes(createdAt.toString.getBytes)

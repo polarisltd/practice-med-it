@@ -46,7 +46,7 @@ object Main {
     val DATE_TAG = new AttributeTag(0x0008, 0x0012)
     val NAME_TAG = new AttributeTag(0x0010, 0x0020)
 
-    MongoWriterSample.runSample("")
+    MongoWriterSample.runSample()
     val dicomMeta = DicomMetadataReader
       .readAttributes("C:\\Users\\polar\\Downloads\\001\\canon\\110955\\A0000")
       .asScala

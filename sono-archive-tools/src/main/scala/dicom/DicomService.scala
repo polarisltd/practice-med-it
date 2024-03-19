@@ -1,5 +1,6 @@
 package dicom
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.util.Timeout
 import db.MongoWriterSample
@@ -10,11 +11,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.{Operation, Parameter}
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.{GET, POST, Path, Produces}
-import spray.json._
 import swagger.DefaultJsonFormats
 
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 
@@ -24,37 +22,33 @@ import scala.concurrent.duration.DurationInt
 
   implicit val timeout: Timeout = Timeout(2.seconds)
 
+    val system: ActorSystem = ActorSystem("SonoArchiveSystem")
+    // Create the actor
+    val processorActor: ActorRef = system.actorOf(ArchiveProcessorActor.props, "processorActor")
 
-  val route: Route =
-    getCanon ~
-      postCanon
+
+    val route: Route =
+    getMongoSample ~
+      postArchiveCanon
 
   @GET
-  @Path("/dicom/canon")
+  @Path("/mongoexample1")
   @Produces(Array(MediaType.APPLICATION_JSON))
-  @Operation(summary = "search canon archive path and extract dicom metadata",
-    description = "return file paths and metadata",
-    parameters = Array(
-      new Parameter(name = "rootPath", in = ParameterIn.QUERY, description = "lookup base path")),
-    responses = Array(
-      new ApiResponse(responseCode = "200", description = "Hello response",
-        content = Array(new Content(schema = new Schema(implementation = classOf[String])))),
-      new ApiResponse(responseCode = "500", description = "Internal server error"))
-  )
-  def getCanon: Route =
-    path("dicom" / "canon") {
+  @Operation(
+    summary = "this call creates single record in mongodb and retrieves it",
+    description = "try out mongo writer from scala")
+  def getMongoSample: Route =
+    path("mongoexample1") {
       get {
-        parameter(Symbol("rootPath")) { rootPath =>
           complete {
             //  (hello ? Hello(name)).mapTo[Greeting]
-            MongoWriterSample.runSample(rootPath)
-            s"[$rootPath]"
+            MongoWriterSample.runSample()
+            s"[\"OK\"]"
           }
         }
-      }
+
 
     }
-
 
     object LocationType extends Enumeration {
       type LocationType = Value
@@ -69,7 +63,7 @@ import scala.concurrent.duration.DurationInt
     implicit val postResponseFormat = jsonFormat3(PostResponse)
 
   @POST
-  @Path("/dicom/canon")
+  @Path("/archive/canon")
   @Produces(Array(MediaType.APPLICATION_JSON))
   @Operation(summary = "New POST endpoint",
     description = "New POST endpoint",
@@ -79,15 +73,14 @@ import scala.concurrent.duration.DurationInt
         content = Array(new Content(schema = new Schema(implementation = classOf[PostResponse])))),
       new ApiResponse(responseCode = "500", description = "Internal server error"))
   )
-  def postCanon: Route =
-    path("dicom" / "canon") {
+  def postArchiveCanon: Route =
+    path("archive" / "canon") {
       post {
         entity(as[PostRequest]) { request =>
           complete {
             println(request)
-            // TODO: Implement the endpoint's logic here
-            // For now, we'll just return a dummy response
-            PostResponse("dummyPatient", "20240301", "dummyFilePath")
+            processorActor ! request.path
+            PostResponse("canon archive processing", "started", request.path)
           }
         }
       }

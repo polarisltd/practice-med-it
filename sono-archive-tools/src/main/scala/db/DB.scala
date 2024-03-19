@@ -1,10 +1,11 @@
 package db
 
 import com.typesafe.config.{Config, ConfigFactory}
+import dicom.SonoArchiveService.Patient
 import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}
 import org.bson.codecs.configuration.{CodecRegistries, CodecRegistry}
 import org.bson.codecs.{Codec, DecoderContext, EncoderContext, UuidCodec}
-import org.bson.{BsonReader, BsonWriter, UuidRepresentation}
+import org.bson.{BsonReader, BsonType, BsonWriter, UuidRepresentation}
 import org.mongodb.scala.MongoClient.DEFAULT_CODEC_REGISTRY
 import org.mongodb.scala.bson.codecs.Macros._
 import org.mongodb.scala.{MongoClient, MongoCollection}
@@ -40,7 +41,7 @@ object DB {
     }
 
   private val customCodecs: CodecRegistry =
-    fromProviders(classOf[HistoryVisit])
+    fromProviders(classOf[HistoryVisit], classOf[Patient] )
 
   private val javaCodecs =
     CodecRegistries.fromCodecs(
@@ -60,5 +61,11 @@ object DB {
 
   val historyVisit: MongoCollection[HistoryVisit] =
     database.getCollection[HistoryVisit]("visits")
+
+  val patient: MongoCollection[Patient] =
+    database.getCollection[Patient]("patients")
+
+
+
 
 }
