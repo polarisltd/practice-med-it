@@ -1,12 +1,17 @@
-version: '3.1'
-
+version: "3.7"
 services:
-  mongodb:
-    image: mongo:6
+  mongo:
+    container_name: container-mongodb
+    image: mongo:latest
     restart: always
     ports:
-      - "27017:27017"
-    env_file:
-      - .mongodb_env
+      - 27017:27017
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root1
+      MONGO_INITDB_ROOT_PASSWORD: secure
+      MONGO_INITDB_DATABASE: root-db
+
     volumes:
-      - ${USER_HOME}/workspace/health-mongodb:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./data:/data/db
