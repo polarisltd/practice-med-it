@@ -25,6 +25,11 @@ val swaggerDependencies = Seq(
   "io.swagger.core.v3" % "swagger-jaxrs2-jakarta" % swaggerVersion
 )
 
+val googleApiDependencies = Seq(
+  "com.google.api-client" % "google-api-client" % "2.0.0",
+  "com.google.oauth-client" % "google-oauth-client-jetty" % "1.34.1",
+  "com.google.apis" % "google-api-services-sheets" % "v4-rev20220927-2.0.0"
+)
 
 libraryDependencies ++= Seq(
     "org.scalameta" %% "munit" % "0.7.29" % Test,
@@ -37,6 +42,6 @@ libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
     "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
 
-  ) ++ swaggerDependencies
+  ) ++ swaggerDependencies ++ googleApiDependencies
 
 
