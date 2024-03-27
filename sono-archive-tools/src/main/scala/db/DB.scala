@@ -41,7 +41,7 @@ object DB {
     }
 
   private val customCodecs: CodecRegistry =
-    fromProviders(classOf[HistoryVisit], classOf[Patient] )
+    fromProviders(classOf[HistoryVisit], classOf[Patient], classOf[TimeReportingPrakse])
 
   private val javaCodecs =
     CodecRegistries.fromCodecs(
@@ -65,7 +65,8 @@ object DB {
   val patient: MongoCollection[Patient] =
     database.getCollection[Patient]("patients")
 
-
+  val timeReportingPrakse : MongoCollection[TimeReportingPrakse] =
+    database.getCollection[TimeReportingPrakse]("timeReportingPrakse")
 
 
 }

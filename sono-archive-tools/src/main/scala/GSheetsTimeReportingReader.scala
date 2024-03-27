@@ -25,8 +25,9 @@ import java.io.File
 import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.jdk.CollectionConverters._
 import com.typesafe.config.{Config, ConfigFactory}
+import db.TimeReportingPrakse
 
-import java.time.LocalDate
+import java.time.{LocalDate, YearMonth, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 
 
@@ -42,22 +43,43 @@ object GSheetsTimeReportingReader extends App{
   val HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport
   val config: Config = ConfigFactory.load()
   private val personSheetIds: List[String] = config.getStringList("sheetIds").asScala.toList
-  private val sheetNames: List[String] = config.getStringList("sheetNames").asScala.toList
+  private val sheetRanges: List[String] = config.getStringList("sheetRanges").asScala.toList
   private val configSheetIdRef = config.getString("configSheetIdRef")
   //val range = "Jan2024!C1:H14"
-  val service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT)).setApplicationName(APPLICATION_NAME).build
+  private val service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT)).setApplicationName(APPLICATION_NAME).build
 
-  personSheetIds.foreach(sheetId => {
+  personSheetIds.foreach(gSheetId => {
 
-    val nameAndId = extractUserNameAndId(sheetId)
-
-    val totalWorkedHours = sheetNames.map(sheetName => sumWorkHours(sheetId, sheetName, nameAndId)).sum
+    val nameAndId = extractUserNameAndId(gSheetId)
+    val sheetTabName = getSheetName(LocalDate.now());
+    val totalWorkedHours = sheetRanges.map(sheetRange => sumWorkHours(gSheetId, sheetTabName, sheetRange, nameAndId)).sum
     println(s">> ${nameAndId._1} (${nameAndId._2}) worked $totalWorkedHours hours in ${getSheetName(LocalDate.now())}")
-    totalWorkedHours
+    val key = s"$sheetTabName:${nameAndId._2}"
+    val uuid = java.util.UUID.nameUUIDFromBytes(key.getBytes)
+    val (firstDay, lastDay) = getFirstAndLastDayOfMonth(sheetTabName)
+
+    GSheetsTimeReportingDAO.save(TimeReportingPrakse(
+      uuid,
+      sheetTabName,
+      firstDay,
+      lastDay,
+      ZonedDateTime.now(),
+      totalWorkedHours,
+      nameAndId._1,
+      nameAndId._2))
   })
 
-def sumWorkHours(sheetId: String, sheetName: String, nameAndId: (String, String)): Int = {
-  val range = sheetName.formatted(getSheetName(LocalDate.now()))
+  def getFirstAndLastDayOfMonth(monthYear: String): (ZonedDateTime, ZonedDateTime) = {
+    val formatter = DateTimeFormatter.ofPattern("MMM yyyy")
+    val yearMonth = YearMonth.parse(monthYear, formatter)
+
+    val firstDayOfMonth = yearMonth.atDay(1).atStartOfDay(ZoneId.systemDefault())
+    val lastDayOfMonth = yearMonth.atEndOfMonth().atStartOfDay(ZoneId.systemDefault())
+    (firstDayOfMonth, lastDayOfMonth)
+  }
+
+def sumWorkHours(sheetId: String, sheetTabName: String, sheetRange: String, nameAndId: (String, Int)): Int = {
+  val range = sheetRange.formatted(sheetTabName)
   println(s"reading sheet: $range")
   val response = service.spreadsheets.values.get(sheetId, range).execute
   val values = response.getValues
@@ -79,7 +101,7 @@ def sumWorkHours(sheetId: String, sheetName: String, nameAndId: (String, String)
 
   case class EmptySheetRange(message: String) extends Exception(message)
 
-  def extractUserNameAndId(sheetId:String): (String, String) = {
+  def extractUserNameAndId(sheetId:String): (String, Int) = {
     val response = service.spreadsheets.values.get(sheetId, configSheetIdRef).execute
     val values = response.getValues
 
@@ -89,7 +111,7 @@ def sumWorkHours(sheetId: String, sheetName: String, nameAndId: (String, String)
       if (firstRow != null && firstRow.size() > 0 && secondRow != null && secondRow.size() > 0
       ) {
         val userName = firstRow.get(0).toString
-        val userId = secondRow.get(0).toString
+        val userId = secondRow.get(0).toString.toInt
         (userName, userId)
       } else {
         throw EmptySheetRange(s"The first row does not have enough columns. $sheetId, $configSheetIdRef ")
