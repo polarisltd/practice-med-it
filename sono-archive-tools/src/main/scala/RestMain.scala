@@ -3,6 +3,7 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.RouteConcatenation
+import com.typesafe.config.ConfigFactory
 import dicom.DicomService
 import swagger.SwaggerDocService
 
@@ -15,15 +16,22 @@ object RestMain extends App with RouteConcatenation {
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
+  val config = ConfigFactory.load()
+  val host = config.getString("http.host")
+  val port = config.getInt("http.port")
+
+  val startup = new Startup(config)(system, executionContext)
 
   val routes =
     new DicomService().route ~
     SwaggerDocService.routes
 
   val f = for {
-    bindingFuture <- Http().newServerAt("0.0.0.0", 8084).bind(routes)
+    bindingFuture <- Http().newServerAt(host, port).bind(routes)
     waitOnFuture  <- Future.never
   } yield waitOnFuture
+
+  println(s"Server online at http://$host:$port")
 
   Await.ready(f, Duration.Inf)
 }

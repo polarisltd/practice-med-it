@@ -40,7 +40,8 @@ libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "1.8.0-beta4",
     "ch.qos.logback" % "logback-classic" % "1.5.3",
     "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
+    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+    "com.typesafe.play" %% "play" % "2.9.2"
 
   ) ++ swaggerDependencies ++ googleApiDependencies
 
